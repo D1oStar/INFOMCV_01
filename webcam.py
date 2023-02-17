@@ -2,12 +2,12 @@ import numpy as np
 import cv2 as cv
 import imageio
 
-
+# load inside and outside parameters of the camera
 mtx = np.load('mtx.npy')
 dist = np.load('dist.npy')
 
 
-# BGR
+# BGR, draw the box and axes on images
 def draw(img, corners, imgpts, ret):
     cv.drawChessboardCorners(img, (9, 6), corners2, ret)
 
@@ -74,13 +74,17 @@ objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
 axis = np.float32([[3, 0, 0], [0, 3, 0], [0, 0, -3]]).reshape(-1, 3)
 axis2 = np.float32([[0, 0, 0], [0, 3, 0], [3, 3, 0], [3, 0, 0], [0, 0, -3], [0, 3, -3], [3, 3, -3], [3, 0, -3]])
 
+# capture the video from the default webcam
 cap = cv.VideoCapture(0)
+# array for saving gif
 imgs = []
 while True:
     ret, img = cap.read()
+    # if the frame is not empty, continue processing
     if ret:
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         ret, corners = cv.findChessboardCorners(gray, (9, 6), None)
+    # if the corners could be found, then continue drawing box and axes
     if ret:
         corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
 
@@ -95,8 +99,10 @@ while True:
         # img = cv.resize(img, (0, 0), fx=0.4, fy=0.4, interpolation=cv.INTER_AREA)
     cv.imshow('webcam', img)
     imgs.append(img)
+    # the frame rate is set to 10fps and will quit with pressing key 'q'
     if cv.waitKey(100) & 0xFF == ord('q'):
         break
+# if imgs is not empty, then save the whole video as gif
 if len(imgs):
     imageio.mimsave('webcam.gif', imgs, 'GIF', duration=0.1)
 cap.release()
